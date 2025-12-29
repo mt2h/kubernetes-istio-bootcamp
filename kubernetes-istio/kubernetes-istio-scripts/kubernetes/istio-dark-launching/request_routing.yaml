@@ -1,0 +1,53 @@
+kind: DestinationRule
+apiVersion: networking.istio.io/v1
+metadata:
+  namespace: devops
+  name: devops-blue-clusterip
+  labels:
+    kiali_wizard: request_routing
+  annotations: ~
+spec:
+  host: devops-blue-clusterip.devops.svc.cluster.local
+  subsets:
+  - name: old
+    labels:
+      version: 1.0.0
+  - name: new
+    labels:
+      version: 1.0.1
+  trafficPolicy: ~
+---
+kind: VirtualService
+apiVersion: networking.istio.io/v1
+metadata:
+  namespace: devops
+  name: devops-blue-clusterip
+  labels:
+    kiali_wizard: request_routing
+spec:
+  http:
+  - route:
+    - destination:
+        host: devops-blue-clusterip.devops.svc.cluster.local
+        subset: old
+      weight: 0
+    - destination:
+        host: devops-blue-clusterip.devops.svc.cluster.local
+        subset: new
+      weight: 100
+    match:
+    - headers:
+        x-target-market:
+          exact: "true"
+  - route:
+    - destination:
+        host: devops-blue-clusterip.devops.svc.cluster.local
+        subset: old
+      weight: 100
+    - destination:
+        host: devops-blue-clusterip.devops.svc.cluster.local
+        subset: new
+      weight: 0
+  hosts:
+  - devops-blue-clusterip.devops.svc.cluster.local
+  gateways: ~

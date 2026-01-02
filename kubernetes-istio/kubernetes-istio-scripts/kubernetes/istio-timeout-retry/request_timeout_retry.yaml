@@ -1,0 +1,47 @@
+kind: DestinationRule
+apiVersion: networking.istio.io/v1
+metadata:
+  namespace: devops
+  name: devops-blue-clusterip
+  labels:
+    kiali_wizard: request_routing
+  annotations: ~
+spec:
+  host: devops-blue-clusterip.devops.svc.cluster.local
+  subsets:
+  - name: old
+    labels:
+      version: 1.0.0
+  trafficPolicy: ~
+---
+kind: VirtualService
+apiVersion: networking.istio.io/v1
+metadata:
+  namespace: devops
+  name: devops-blue-clusterip
+  labels:
+    kiali_wizard: request_routing
+spec:
+  http:
+  - route:
+    - destination:
+        host: devops-blue-clusterip.devops.svc.cluster.local
+        subset: old
+      weight: 100
+    match: 
+      - headers:
+          x-retry:
+            regex: ^.*$
+    retries:
+      attempts: 10
+      perTryTimeout: 2s
+      #retryOn: gateway-error,connect-failure,refused-stream
+      retryOn: '5xx,400,401,403,404,405,406,408,413,429,431'
+  - route:
+    - destination:
+        host: devops-blue-clusterip.devops.svc.cluster.local
+        subset: old
+      weight: 100
+  hosts:
+  - devops-blue-clusterip.devops.svc.cluster.local
+  gateways: ~
